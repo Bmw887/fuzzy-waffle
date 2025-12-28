@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R&B - Professional Billing System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out;
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #f97316, #dc2626);
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #fff7ed;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #f97316, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .shadow-glow {
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
+        }
+        .hover-lift {
+            transition: all 0.3s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // --- CONSTANTS ---
+        const ADMIN_PASSCODE = 'admin123';
+        const USER_CREDENTIALS = [
+            { username: 'admin', password: 'admin123', role: 'admin', name: 'Administrator' },
+            { username: 'cashier', password: 'cashier123', role: 'cashier', name: 'Cashier' },
+            { username: 'manager', password: 'manager123', role: 'manager', name: 'Manager' }
+        ];
+        const RESTAURANT_NAME = 'R&B Restaurant';
+        const PAYMENT_METHODS = ['Cash', 'Card', 'Online (UPI/Other)'];
+        const CATEGORIES = ['All', 'Main Course', 'Appetizer', 'Beverage', 'Bread', 'Dessert'];
+        const CURRENCY_SYMBOL = 'PKR ';
+
+        // --- PROFESSIONAL LOGIN COMPONENT ---
+        const LoginScreen = ({ onLogin }) => {
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [rememberMe, setRememberMe] = useState(false);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setError('');
+                setLoading(true);
+
+                setTimeout(() => {
+                    const user = USER_CREDENTIALS.find(u => 
+                        u.username === username && u.password === password
+                    );
+
+                    if (user) {
+                        if (rememberMe) {
+                            localStorage.setItem('rb-user', JSON.stringify({
+                                username: user.username,
+                                name: user.name,
+                                role: user.role,
+                                lastLogin: new Date().toISOString()
+                            }));
+                        }
+                        onLogin(user);
+                    } else {
+                        setError('Invalid username or password');
+                    }
+                    setLoading(false);
+                }, 800);
+            };
+
+            // Check for remembered user
+            useEffect(() => {
+                const remembered = localStorage.getItem('rb-user');
+                if (remembered) {
+                    const user = JSON.parse(remembered);
+                    setUsername(user.username);
+                    setRememberMe(true);
+                }
+            }, []);
+
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4">
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute top-0 left-1/4 w-64 h-64 bg-gradient-to-br from-orange-200 to-red-200 rounded-full blur-3xl opacity-40 animate-float"></div>
+                        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-tr from-amber-200 to-orange-200 rounded-full blur-3xl opacity-30 animate-float" style={{animationDelay: '1s'}}></div>
+                    </div>
+
+                    <div className="glass-effect w-full max-w-md rounded-3xl shadow-2xl p-8 animate-fadeIn hover-lift">
+                        {/* Logo & Header */}
+                        <div className="text-center mb-8">
+                            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl shadow-glow mb-4">
+                                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <h1 className="text-4xl font-bold gradient-text mb-2">{RESTAURANT_NAME}</h1>
+                            <p className="text-gray-600">Professional Billing System</p>
+                        </div>
+
+                        {/* Login Form */}
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg className="w-4 h-4 inline mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    Username
+                                </label>
+                                <input
+                                    type="text"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all"
+                                    placeholder="Enter your username"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <svg className="w-4 h-4 inline mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    Password
+                                </label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all"
+                                    placeholder="Enter your password"
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <input
+                                        type="checkbox"
+                                        id="remember"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                                    />
+                                    <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
+                                        Remember me
+                                    </label>
+                                </div>
+                                <button type="button" className="text-sm text-orange-600 hover:text-orange-700">
+                                    Forgot password?
+                                </button>
+                            </div>
+
+                            {error && (
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                                    <p className="text-red-600 text-sm flex items-center">
+                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {error}
+                                    </p>
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-red-600 disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl hover-lift"
+                            >
+                                {loading ? (
+                                    <span className="flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                                        Signing in...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center justify-center">
+                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                        </svg>
+                                        Sign In
+                                    </span>
+                                )}
+                            </button>
+                        </form>
+
+                        {/* Demo Credentials */}
+                        <div className="mt-8 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl">
+                            <p className="text-sm text-gray-600 mb-2">Demo Credentials:</p>
+                            <div className="space-y-1 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-700">Admin:</span>
+                                    <span className="font-medium">admin / admin123</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-700">Cashier:</span>
+                                    <span className="font-medium">cashier / cashier123</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-700">Manager:</span>
+                                    <span className="font-medium">manager / manager123</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 text-center">
+                            <p className="text-sm text-gray-500">
+                                © {new Date().getFullYear()} {RESTAURANT_NAME}. All rights reserved.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- ICONS ---
+        const ReceiptIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+        );
+
+        const CartIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+        );
+
+        const DashboardIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+        );
+
+        const ReportIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+        );
+
+        const UsersIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13 0a6 6 0 01-9 5.197" />
+            </svg>
+        );
+
+        const LogoutIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+        );
+
+        const PlusIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+        );
+
+        const TrashIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        );
+
+        const EditIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+        );
+
+        const PrinterIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+        );
+
+        const DownloadIcon = ({ className = "w-6 h-6" }) => (
+            <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+        );
+
+        // --- DAILY SALES REPORT COMPONENT ---
+        const DailySalesReport = ({ todaySales, todayTotal }) => {
+            const [showReport, setShowReport] = useState(false);
+            
+            // Calculate payment method breakdown
+            const paymentBreakdown = todaySales.reduce((acc, bill) => {
+                if (!acc[bill.paymentMethod]) {
+                    acc[bill.paymentMethod] = { count: 0, amount: 0 };
+                }
+                acc[bill.paymentMethod].count++;
+                acc[bill.paymentMethod].amount += bill.total;
+                return acc;
+            }, {});
+
+            // Generate CSV for download
+            const downloadCSV = () => {
+                const csvContent = [
+                    ['Bill #', 'Time', 'Table', 'Customer', 'Payment Method', 'Subtotal', 'Discount', 'Total', 'Items'],
+                    ...todaySales.map(bill => [
+                        bill.billNumber,
+                        bill.time,
+                        bill.tableNumber,
+                        bill.customerName,
+                        bill.paymentMethod,
+                        bill.subtotal.toFixed(2),
+                        bill.discountAmount.toFixed(2),
+                        bill.total.toFixed(2),
+                        bill.items.map(item => `${item.name} (${item.quantity}x)`).join(', ')
+                    ])
+                ].map(row => row.join(',')).join('\n');
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Daily_Sales_Report_${new Date().toLocaleDateString('en-CA')}.csv`;
+                a.click();
+            };
+
+            // Calculate best selling items for today
+            const getTodayBestSellers = () => {
+                const itemSales = todaySales.reduce((acc, bill) => {
+                    bill.items.forEach(item => {
+                        if (!acc[item.name]) {
+                            acc[item.name] = { 
+                                name: item.name, 
+                                totalQuantity: 0, 
+                                totalRevenue: 0 
+                            };
+                        }
+                        acc[item.name].totalQuantity += item.quantity;
+                        acc[item.name].totalRevenue += item.price * item.quantity;
+                    });
+                    return acc;
+                }, {});
+
+                return Object.values(itemSales)
+                    .sort((a, b) => b.totalQuantity - a.totalQuantity)
+                    .slice(0, 5);
+            };
+
+            const todayBestSellers = getTodayBestSellers();
+
+            if (!showReport) {
+                return (
+                    <div className="glass-effect rounded-2xl p-6 shadow-lg hover-lift cursor-pointer" onClick={() => setShowReport(true)}>
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p className="text-gray-500 text-sm mb-1">📊 Daily Sales Report</p>
+                                <p className="text-3xl font-bold gradient-text">{todaySales.length} Bills</p>
+                            </div>
+                            <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-3 rounded-xl">
+                                <ReportIcon className="w-7 h-7 text-white" />
+                            </div>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-2">Click to view detailed report</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="glass-effect rounded-3xl p-6 shadow-lg">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 className="text-2xl font-bold text-gray-800">📊 Daily Sales Report</h3>
+                            <p className="text-gray-600">{new Date().toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                            })}</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={downloadCSV}
+                                className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all hover-lift"
+                            >
+                                <DownloadIcon className="w-5 h-5 inline mr-2" />
+                                Export CSV
+                            </button>
+                            <button
+                                onClick={() => setShowReport(false)}
+                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400 transition-all"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-2xl border border-green-200">
+                            <p className="text-gray-600 text-sm">Total Bills Today</p>
+                            <p className="text-3xl font-bold text-green-600">{todaySales.length}</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-2xl border border-blue-200">
+                            <p className="text-gray-600 text-sm">Today's Revenue</p>
+                            <p className="text-3xl font-bold text-blue-600">{CURRENCY_SYMBOL}{todayTotal.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-200">
+                            <p className="text-gray-600 text-sm">Avg Bill Value</p>
+                            <p className="text-3xl font-bold text-purple-600">
+                                {CURRENCY_SYMBOL}{todaySales.length > 0 ? (todayTotal / todaySales.length).toFixed(0) : 0}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Payment Method Breakdown */}
+                    <div className="mb-6">
+                        <h4 className="font-bold text-gray-800 mb-3">💳 Payment Method Breakdown</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {Object.entries(paymentBreakdown).map(([method, data]) => (
+                                <div key={method} className="bg-gray-50 p-3 rounded-xl">
+                                    <p className="font-medium text-gray-800">{method}</p>
+                                    <div className="flex justify-between mt-2">
+                                        <span className="text-sm text-gray-600">{data.count} bills</span>
+                                        <span className="font-bold text-green-600">{CURRENCY_SYMBOL}{data.amount.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Today's Best Sellers */}
+                    {todayBestSellers.length > 0 && (
+                        <div className="mb-6">
+                            <h4 className="font-bold text-gray-800 mb-3">🔥 Today's Top Sellers</h4>
+                            <div className="space-y-2">
+                                {todayBestSellers.map((item, index) => (
+                                    <div key={item.name} className="flex justify-between items-center p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl">
+                                        <div className="flex items-center">
+                                            <span className="text-lg font-bold text-orange-600 mr-3 w-6 text-center">{index + 1}.</span>
+                                            <span className="font-medium">{item.name}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-bold text-gray-800">{item.totalQuantity} sold</p>
+                                            <p className="text-sm text-gray-600">{CURRENCY_SYMBOL}{item.totalRevenue.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Detailed Bill List */}
+                    <div>
+                        <h4 className="font-bold text-gray-800 mb-3">📋 Bill Details</h4>
+                        <div className="overflow-x-auto rounded-2xl border border-gray-200">
+                            <table className="w-full">
+                                <thead className="bg-gradient-to-r from-orange-50 to-red-50">
+                                    <tr>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Bill #</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Time</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Table</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Customer</th>
+                                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Payment</th>
+                                        <th className="text-right py-3 px-4 font-semibold text-gray-700">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {todaySales.map((bill) => (
+                                        <tr key={bill.id} className="border-b border-gray-100 hover:bg-orange-50">
+                                            <td className="py-3 px-4 font-semibold text-orange-600">{bill.billNumber}</td>
+                                            <td className="py-3 px-4 text-gray-600">{bill.time}</td>
+                                            <td className="py-3 px-4 text-gray-600">{bill.tableNumber}</td>
+                                            <td className="py-3 px-4">{bill.customerName}</td>
+                                            <td className="py-3 px-4">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                    bill.paymentMethod === 'Cash' ? 'bg-green-100 text-green-800' :
+                                                    bill.paymentMethod === 'Card' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-purple-100 text-purple-800'
+                                                }`}>
+                                                    {bill.paymentMethod}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-right font-bold text-green-600">
+                                                {CURRENCY_SYMBOL}{bill.total.toLocaleString()}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot className="bg-gradient-to-r from-gray-50 to-gray-100">
+                                    <tr>
+                                        <td colSpan="5" className="py-4 px-4 text-right font-bold text-gray-800">
+                                            Today's Total:
+                                        </td>
+                                        <td className="py-4 px-4 text-right font-bold text-green-600 text-xl">
+                                            {CURRENCY_SYMBOL}{todayTotal.toLocaleString()}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            {todaySales.length === 0 && (
+                                <div className="text-center py-12">
+                                    <ReceiptIcon className="w-16 h-16 text-gray-300 mx-auto mb-3" />
+                                    <p className="text-gray-400">No bills generated today</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN BILLING SYSTEM ---
+        const RestaurantBillingSystem = ({ user, onLogout }) => {
+            const [menuItems, setMenuItems] = useState([]);
+            const [cart, setCart] = useState([]);
+            const [customerName, setCustomerName] = useState('');
+            const [tableNumber, setTableNumber] = useState('');
+            const [discount, setDiscount] = useState(0);
+            const [discountType, setDiscountType] = useState('percentage');
+            const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0]);
+            const [bills, setBills] = useState([]);
+            const [view, setView] = useState('billing');
+            const [showAddItem, setShowAddItem] = useState(false);
+            const [newItem, setNewItem] = useState({ name: '', price: '', category: CATEGORIES[1] });
+            const [editingItem, setEditingItem] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [printBill, setPrintBill] = useState(null);
+            const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
+            const [currentTime, setCurrentTime] = useState(new Date());
+
+            // Update time every minute
+            useEffect(() => {
+                const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+                return () => clearInterval(timer);
+            }, []);
+
+            useEffect(() => {
+                loadData();
+            }, []);
+
+            const loadData = () => {
+                setLoading(true);
+                try {
+                    const storedMenu = localStorage.getItem('rb-menu');
+                    const storedBills = localStorage.getItem('rb-bills');
+                    
+                    if (storedMenu) {
+                        setMenuItems(JSON.parse(storedMenu));
+                    } else {
+                        const defaultMenu = [
+                            { id: 1, name: 'Chicken Biryani', price: 350, category: 'Main Course' },
+                            { id: 2, name: 'Mutton Karahi', price: 800, category: 'Main Course' },
+                            { id: 3, name: 'Chicken Tikka', price: 450, category: 'Appetizer' },
+                            { id: 4, name: 'Seekh Kabab', price: 400, category: 'Appetizer' },
+                            { id: 5, name: 'Garlic Naan', price: 30, category: 'Bread' },
+                            { id: 6, name: 'Fresh Lime', price: 60, category: 'Beverage' },
+                            { id: 7, name: 'Butter Chicken', price: 450, category: 'Main Course' },
+                            { id: 8, name: 'Vegetable Biryani', price: 280, category: 'Main Course' },
+                            { id: 9, name: 'Chicken Wings', price: 350, category: 'Appetizer' },
+                            { id: 10, name: 'Mineral Water', price: 40, category: 'Beverage' },
+                            { id: 11, name: 'Roti', price: 20, category: 'Bread' },
+                            { id: 12, name: 'Kheer', price: 120, category: 'Dessert' }
+                        ];
+                        setMenuItems(defaultMenu);
+                        localStorage.setItem('rb-menu', JSON.stringify(defaultMenu));
+                    }
+                    
+                    if (storedBills) {
+                        setBills(JSON.parse(storedBills));
+                    }
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                }
+                setLoading(false);
+            };
+
+            const saveMenu = (menu) => {
+                localStorage.setItem('rb-menu', JSON.stringify(menu));
+            };
+
+            const saveBills = (newBills) => {
+                localStorage.setItem('rb-bills', JSON.stringify(newBills));
+            };
+
+            const addMenuItem = () => {
+                if (!newItem.name || !newItem.price || !newItem.category) {
+                    alert('Please enter item name, price, and category');
+                    return;
+                }
+                const item = {
+                    id: Date.now(),
+                    name: newItem.name,
+                    price: parseFloat(newItem.price),
+                    category: newItem.category
+                };
+                const updated = [...menuItems, item];
+                setMenuItems(updated);
+                saveMenu(updated);
+                setNewItem({ name: '', price: '', category: CATEGORIES[1] });
+                setShowAddItem(false);
+            };
+
+            const updateMenuItem = () => {
+                if (!editingItem.name || !editingItem.price || !editingItem.category) {
+                    alert('Please enter item name, price, and category');
+                    return;
+                }
+                const updated = menuItems.map(item => 
+                    item.id === editingItem.id ? { ...editingItem, price: parseFloat(editingItem.price) } : item
+                );
+                setMenuItems(updated);
+                saveMenu(updated);
+                setEditingItem(null);
+            };
+
+            const deleteMenuItem = (itemId) => {
+                if (window.confirm('Delete this menu item?')) {
+                    const updated = menuItems.filter(item => item.id !== itemId);
+                    setMenuItems(updated);
+                    saveMenu(updated);
+                }
+            };
+
+            const addToCart = (item) => {
+                const existing = cart.find(c => c.id === item.id);
+                if (existing) {
+                    setCart(cart.map(c => 
+                        c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c
+                    ));
+                } else {
+                    setCart([...cart, { ...item, quantity: 1 }]);
+                }
+            };
+
+            const updateQuantity = (itemId, change) => {
+                setCart(cart.map(item => {
+                    if (item.id === itemId) {
+                        const newQty = item.quantity + change;
+                        return newQty > 0 ? { ...item, quantity: newQty } : item;
+                    }
+                    return item;
+                }).filter(item => item.quantity > 0));
+            };
+
+            const removeFromCart = (itemId) => {
+                setCart(cart.filter(item => item.id !== itemId));
+            };
+
+            const calculateSubtotal = useCallback(() => {
+                return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            }, [cart]);
+
+            const calculateDiscountAmount = useCallback((subtotal) => {
+                const discValue = parseFloat(discount) || 0;
+                if (discountType === 'percentage') {
+                    const percentage = Math.min(discValue, 100) / 100;
+                    return subtotal * percentage;
+                }
+                return Math.min(discValue, subtotal);
+            }, [discount, discountType]);
+
+            const calculateGrandTotal = useCallback(() => {
+                const subtotal = calculateSubtotal();
+                const discountAmount = calculateDiscountAmount(subtotal);
+                return subtotal - discountAmount;
+            }, [calculateSubtotal, calculateDiscountAmount]);
+
+            const generateBill = () => {
+                if (cart.length === 0) {
+                    alert('Please add items to cart first!');
+                    return;
+                }
+
+                const subtotal = calculateSubtotal();
+                const discountAmount = calculateDiscountAmount(subtotal);
+                const grandTotal = calculateGrandTotal();
+
+                const bill = {
+                    id: Date.now(),
+                    billNumber: 'BILL-' + String(bills.length + 1).padStart(4, '0'),
+                    customerName: customerName || 'Walk-in Customer',
+                    tableNumber: tableNumber || 'Takeout',
+                    items: [...cart],
+                    subtotal: parseFloat(subtotal.toFixed(2)),
+                    discountType: discountType,
+                    discountValue: parseFloat(discount) || 0,
+                    discountAmount: parseFloat(discountAmount.toFixed(2)),
+                    total: parseFloat(grandTotal.toFixed(2)),
+                    paymentMethod: paymentMethod,
+                    date: new Date().toISOString(),
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                    processedBy: user.name
+                };
+
+                const newBills = [...bills, bill];
+                setBills(newBills);
+                saveBills(newBills);
+                
+                setPrintBill(bill);
+                setCart([]);
+                setCustomerName('');
+                setTableNumber('');
+                setDiscount(0);
+                setPaymentMethod(PAYMENT_METHODS[0]);
+            };
+
+            const printBillReceipt = (bill) => {
+                const printWindow = window.open('', '_blank');
+                const date = new Date(bill.date);
+                
+                const itemsHTML = bill.items.map(item => {
+                    const lineTotal = item.price * item.quantity;
+                    return '<div class="item-row"><div class="item-name">' + item.name + '</div><div class="item-qty">' + item.quantity + '</div><div class="item-price">Rs. ' + lineTotal.toFixed(2) + '</div></div>';
+                }).join('');
+                
+                const printContent = `
+                <!DOCTYPE html><html><head><title>Bill ${bill.billNumber}</title><style>
+                    body{font-family:"Courier New",monospace;width:300px;margin:20px auto;padding:20px}
+                    .header{text-align:center;border-bottom:2px dashed #333;padding-bottom:10px;margin-bottom:15px}
+                    .restaurant-name{font-size:24px;font-weight:bold;margin-bottom:5px}
+                    .bill-info{margin:15px 0;font-size:12px}
+                    .items{margin:15px 0}
+                    .item-row{display:flex;justify-content:space-between;margin:8px 0;font-size:14px}
+                    .item-name{flex:1}.item-qty{width:40px;text-align:center}.item-price{width:80px;text-align:right}
+                    .divider{border-top:1px dashed #333;margin:10px 0}
+                    .total-section{margin-top:15px;padding-top:10px}
+                    .total-row{display:flex;justify-content:space-between;font-size:14px;margin:5px 0}
+                    .grand-total-row{font-size:18px;font-weight:bold;border-top:2px solid #333;padding-top:10px;}
+                    .footer{text-align:center;margin-top:20px;border-top:2px dashed #333;padding-top:15px;font-size:12px}
+                    @media print{body{margin:0;padding:10px}}
+                </style></head>
+                <body>
+                    <div class="header">
+                        <div class="restaurant-name">${RESTAURANT_NAME}</div>
+                        <div>Thank You for Dining!</div>
+                    </div>
+                    <div class="bill-info">
+                        <div><strong>Bill No:</strong> ${bill.billNumber}</div>
+                        <div><strong>Table:</strong> ${bill.tableNumber}</div>
+                        <div><strong>Date:</strong> ${date.toLocaleDateString()}</div>
+                        <div><strong>Time:</strong> ${bill.time}</div>
+                        <div><strong>Customer:</strong> ${bill.customerName}</div>
+                        <div><strong>Processed By:</strong> ${bill.processedBy}</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="items">
+                        <div class="item-row" style="font-weight:bold"><div class="item-name">Item</div><div class="item-qty">Qty</div><div class="item-price">Price</div></div>
+                        <div class="divider"></div>
+                        ${itemsHTML}
+                    </div>
+                    <div class="total-section">
+                        <div class="total-row"><span>Subtotal:</span><span>Rs. ${bill.subtotal.toFixed(2)}</span></div>
+                        <div class="total-row"><span>Discount (${bill.discountType === 'percentage' ? bill.discountValue + '%' : 'Fixed'}):</span><span>- Rs. ${bill.discountAmount.toFixed(2)}</span></div>
+                        <div class="grand-total-row total-row"><span>GRAND TOTAL:</span><span>Rs. ${bill.total.toFixed(2)}</span></div>
+                        <div class="total-row" style="margin-top: 10px; font-weight: bold;"><span>Payment Method:</span><span>${bill.paymentMethod}</span></div>
+                    </div>
+                    <div class="footer">
+                        <div>Visit Again!</div>
+                        <div style="margin-top:5px">Powered by R&B POS</div>
+                    </div>
+                </body></html>`;
+                
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                setTimeout(() => {
+                    printWindow.print();
+                }, 250);
+            };
+
+            const getTodaySales = () => {
+                const today = new Date().toDateString();
+                return bills.filter(bill => new Date(bill.date).toDateString() === today);
+            };
+
+            const getTodayTotal = () => {
+                return getTodaySales().reduce((sum, bill) => sum + bill.total, 0);
+            };
+
+            const getBestSellingItems = useCallback(() => {
+                const itemSales = bills.reduce((acc, bill) => {
+                    bill.items.forEach(item => {
+                        if (!acc[item.name]) {
+                            acc[item.name] = { 
+                                name: item.name, 
+                                totalQuantity: 0, 
+                                totalRevenue: 0 
+                            };
+                        }
+                        acc[item.name].totalQuantity += item.quantity;
+                        acc[item.name].totalRevenue += item.price * item.quantity;
+                    });
+                    return acc;
+                }, {});
+
+                return Object.values(itemSales)
+                    .sort((a, b) => b.totalQuantity - a.totalQuantity)
+                    .slice(0, 5);
+            }, [bills]);
+
+            const getFilteredMenuItems = () => {
+                if (selectedCategory === 'All') return menuItems;
+                return menuItems.filter(item => item.category === selectedCategory);
+            };
+
+            const clearAllData = () => {
+                if (user.role !== 'admin') {
+                    alert('Admin privilege required to clear data.');
+                    return;
+                }
+                if (window.confirm('ADMIN ACTION: Are you sure you want to clear ALL sales data? This cannot be undone.')) {
+                    setBills([]);
+                    localStorage.removeItem('rb-bills');
+                    alert('Sales data cleared successfully!');
+                }
+            };
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-500 mx-auto mb-4"></div>
+                            <p className="text-gray-600 text-lg">Loading Professional System...</p>
+                        </div>
+                    </div>
+                );
+            }
+            
+            const subtotal = calculateSubtotal();
+            const discountAmount = calculateDiscountAmount(subtotal);
+            const grandTotal = calculateGrandTotal();
+            const bestSellers = getBestSellingItems();
+            const todaySales = getTodaySales();
+            const todayTotal = getTodayTotal();
+
+            return (
+                <div className="min-h-screen">
+                    {/* Professional Header */}
+                    <div className="glass-effect sticky top-0 z-50 shadow-lg">
+                        <div className="max-w-7xl mx-auto px-4 py-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-gradient-to-br from-orange-500 to-red-600 p-3 rounded-2xl shadow-glow">
+                                        <ReceiptIcon className="w-7 h-7 text-white" />
+                                    </div>
+                                    <div>
+                                        <h1 className="text-2xl font-bold gradient-text">{RESTAURANT_NAME}</h1>
+                                        <p className="text-sm text-gray-600">Billing System v2.0</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-6">
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-600">Welcome, <span className="font-semibold text-orange-600">{user.name}</span></p>
+                                        <p className="text-xs text-gray-500 capitalize">{user.role.toUpperCase()}</p>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setView('billing')}
+                                            className={`px-5 py-2.5 rounded-xl font-medium transition-all hover-lift ${view === 'billing' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-glow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                        >
+                                            <CartIcon className="w-5 h-5 inline mr-2" />
+                                            Billing
+                                        </button>
+                                        <button
+                                            onClick={() => setView('dashboard')}
+                                            className={`px-5 py-2.5 rounded-xl font-medium transition-all hover-lift ${view === 'dashboard' ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-glow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                        >
+                                            <DashboardIcon className="w-5 h-5 inline mr-2" />
+                                            Dashboard
+                                        </button>
+                                        <button
+                                            onClick={onLogout}
+                                            className="px-5 py-2.5 bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-xl hover:from-gray-700 hover:to-gray-900 transition-all hover-lift"
+                                        >
+                                            <LogoutIcon className="w-5 h-5 inline mr-2" />
+                                            Logout
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="max-w-7xl mx-auto p-4">
+                        {/* User Info Bar - Show only for Admin/Manager, hide for Cashier */}
+                        {user.role !== 'cashier' && (
+                            <div className="glass-effect rounded-2xl p-4 mb-6 shadow-lg">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-2 rounded-xl">
+                                            <UsersIcon className="w-6 h-6 text-white" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-800">{user.name}</p>
+                                            <p className="text-sm text-gray-500 capitalize">{user.role} • Logged in at {currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-2xl font-bold gradient-text">{CURRENCY_SYMBOL}{todayTotal.toLocaleString()}</p>
+                                        <p className="text-sm text-gray-500">Today's Revenue</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'billing' ? (
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+                                {/* Menu Section */}
+                                <div className="lg:col-span-2">
+                                    <div className="glass-effect rounded-3xl p-6 shadow-lg mb-6">
+                                        <div className="flex justify-between items-center mb-6">
+                                            <h2 className="text-2xl font-bold text-gray-800">Menu Items</h2>
+                                            {user.role === 'admin' && (
+                                                <button
+                                                    onClick={() => setShowAddItem(!showAddItem)}
+                                                    className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all hover-lift shadow-md"
+                                                >
+                                                    <PlusIcon className="w-5 h-5 inline mr-2" />
+                                                    Add Item
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Category Tabs */}
+                                        <div className="flex flex-wrap gap-2 mb-6">
+                                            {CATEGORIES.map(category => (
+                                                <button
+                                                    key={category}
+                                                    onClick={() => setSelectedCategory(category)}
+                                                    className={`px-4 py-2 rounded-xl font-medium transition-all hover-lift ${selectedCategory === category ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-glow' : 'glass-effect text-gray-700 hover:bg-orange-50'}`}
+                                                >
+                                                    {category}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Add Item Form */}
+                                        {showAddItem && user.role === 'admin' && (
+                                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-2xl mb-6 border border-green-200 shadow-md">
+                                                <h3 className="font-bold text-gray-800 mb-4">Add New Menu Item</h3>
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Item Name"
+                                                        value={newItem.name}
+                                                        onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                                                        className="px-4 py-2.5 border-2 border-green-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none col-span-2"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Price"
+                                                        value={newItem.price}
+                                                        onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+                                                        className="px-4 py-2.5 border-2 border-green-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none"
+                                                    />
+                                                    <select
+                                                        value={newItem.category}
+                                                        onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                                                        className="px-4 py-2.5 border-2 border-green-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none"
+                                                    >
+                                                        {CATEGORIES.slice(1).map(cat => 
+                                                            <option key={cat} value={cat}>{cat}</option>
+                                                        )}
+                                                    </select>
+                                                </div>
+                                                <div className="flex gap-3">
+                                                    <button
+                                                        onClick={addMenuItem}
+                                                        className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-2.5 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all"
+                                                    >
+                                                        Save Item
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowAddItem(false);
+                                                            setNewItem({ name: '', price: '', category: CATEGORIES[1] });
+                                                        }}
+                                                        className="px-6 bg-gray-300 text-gray-700 py-2.5 rounded-xl hover:bg-gray-400 transition-all"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Menu Grid */}
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-scroll">
+                                            {getFilteredMenuItems().map(item => (
+                                                <div key={item.id}>
+                                                    {editingItem && editingItem.id === item.id ? (
+                                                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-2xl border-2 border-blue-200">
+                                                            <input
+                                                                type="text"
+                                                                value={editingItem.name}
+                                                                onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                                                                className="w-full px-3 py-2 border-2 border-blue-200 rounded-lg mb-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                                                            />
+                                                            <input
+                                                                type="number"
+                                                                value={editingItem.price}
+                                                                onChange={(e) => setEditingItem({ ...editingItem, price: e.target.value })}
+                                                                className="w-full px-3 py-2 border-2 border-blue-200 rounded-lg mb-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                                                            />
+                                                            <select
+                                                                value={editingItem.category}
+                                                                onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                                                                className="w-full px-3 py-2 border-2 border-blue-200 rounded-lg mb-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+                                                            >
+                                                                {CATEGORIES.slice(1).map(cat => 
+                                                                    <option key={cat} value={cat}>{cat}</option>
+                                                                )}
+                                                            </select>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={updateMenuItem}
+                                                                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all"
+                                                                >
+                                                                    Update
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setEditingItem(null)}
+                                                                    className="px-4 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-all"
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="group relative">
+                                                            <button
+                                                                onClick={() => addToCart(item)}
+                                                                className="w-full glass-effect p-4 rounded-2xl hover:bg-gradient-to-br hover:from-orange-50 hover:to-red-50 transition-all duration-300 hover-lift text-left border border-gray-100 hover:border-orange-200"
+                                                            >
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <div>
+                                                                        <p className="text-xs font-medium text-orange-600 mb-1">{item.category}</p>
+                                                                        <p className="font-semibold text-gray-800 truncate">{item.name}</p>
+                                                                    </div>
+                                                                    <span className="text-lg font-bold gradient-text">{CURRENCY_SYMBOL}{item.price}</span>
+                                                                </div>
+                                                                <p className="text-sm text-gray-500">Click to add to order</p>
+                                                            </button>
+                                                            {user.role === 'admin' && (
+                                                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setEditingItem(item);
+                                                                        }}
+                                                                        className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-2 rounded-lg shadow-md hover-lift"
+                                                                        title="Edit Item"
+                                                                    >
+                                                                        <EditIcon className="w-4 h-4" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            deleteMenuItem(item.id);
+                                                                        }}
+                                                                        className="bg-gradient-to-r from-red-500 to-red-600 text-white p-2 rounded-lg shadow-md hover-lift"
+                                                                        title="Delete Item"
+                                                                    >
+                                                                        <TrashIcon className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Customer & Table Info */}
+                                    <div className="glass-effect rounded-3xl p-6 shadow-lg">
+                                        <h3 className="text-xl font-bold text-gray-800 mb-4">Order Details</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Table Number</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Enter table number"
+                                                    value={tableNumber}
+                                                    onChange={(e) => setTableNumber(e.target.value)}
+                                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Customer Name (Optional)</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Customer name"
+                                                    value={customerName}
+                                                    onChange={(e) => setCustomerName(e.target.value)}
+                                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Order Summary */}
+                                <div>
+                                    <div className="glass-effect rounded-3xl p-6 shadow-lg sticky top-24">
+                                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Order Summary</h2>
+                                        
+                                        {/* Cart Items */}
+                                        <div className="space-y-4 mb-6 max-h-80 overflow-y-auto pr-2 custom-scroll">
+                                            {cart.length === 0 ? (
+                                                <div className="text-center py-8">
+                                                    <CartIcon className="w-16 h-16 text-gray-300 mx-auto mb-3" />
+                                                    <p className="text-gray-400">Your cart is empty</p>
+                                                    <p className="text-sm text-gray-500 mt-1">Click menu items to add</p>
+                                                </div>
+                                            ) : (
+                                                cart.map(item => (
+                                                    <div key={item.id} className="glass-effect p-4 rounded-xl border border-gray-100">
+                                                        <div className="flex justify-between items-start mb-3">
+                                                            <div>
+                                                                <p className="font-semibold text-gray-800">{item.name}</p>
+                                                                <p className="text-sm text-gray-500">{CURRENCY_SYMBOL}{item.price} each</p>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => removeFromCart(item.id)}
+                                                                className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Remove Item"
+                                                            >
+                                                                <TrashIcon className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 border border-gray-200">
+                                                                <button
+                                                                    onClick={() => updateQuantity(item.id, -1)}
+                                                                    className="text-orange-600 font-bold text-lg w-7 h-7 flex items-center justify-center hover:bg-orange-50 rounded transition-all"
+                                                                >
+                                                                    −
+                                                                </button>
+                                                                <span className="font-semibold w-8 text-center">{item.quantity}</span>
+                                                                <button
+                                                                    onClick={() => updateQuantity(item.id, 1)}
+                                                                    className="text-orange-600 font-bold text-lg w-7 h-7 flex items-center justify-center hover:bg-orange-50 rounded transition-all"
+                                                                >
+                                                                    +
+                                                                </button>
+                                                            </div>
+                                                            <p className="font-bold text-gray-800">{CURRENCY_SYMBOL}{(item.price * item.quantity).toFixed(2)}</p>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+
+                                        {/* Discount Section */}
+                                        <div className="mb-6">
+                                            <h4 className="font-semibold text-gray-700 mb-3">Apply Discount</h4>
+                                            <div className="flex gap-3">
+                                                <input
+                                                    type="number"
+                                                    placeholder="Discount value"
+                                                    value={discount}
+                                                    onChange={(e) => setDiscount(e.target.value)}
+                                                    className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none"
+                                                />
+                                                <select
+                                                    value={discountType}
+                                                    onChange={(e) => setDiscountType(e.target.value)}
+                                                    className="px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none"
+                                                >
+                                                    <option value="percentage">%</option>
+                                                    <option value="fixed">{CURRENCY_SYMBOL}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        {/* Price Breakdown */}
+                                        <div className="space-y-3 mb-6">
+                                            <div className="flex justify-between text-gray-700">
+                                                <span>Subtotal</span>
+                                                <span className="font-semibold">{CURRENCY_SYMBOL}{subtotal.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-red-500">
+                                                <span>Discount</span>
+                                                <span className="font-semibold">- {CURRENCY_SYMBOL}{discountAmount.toFixed(2)}</span>
+                                            </div>
+                                            <div className="border-t border-gray-200 pt-3">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-xl font-bold text-gray-800">Grand Total</span>
+                                                    <span className="text-3xl font-bold gradient-text">{CURRENCY_SYMBOL}{grandTotal.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Payment Method */}
+                                        <div className="mb-6">
+                                            <select
+                                                value={paymentMethod}
+                                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                                className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none bg-white font-medium"
+                                            >
+                                                {PAYMENT_METHODS.map(method => 
+                                                    <option key={method} value={method}>💳 Pay with {method}</option>
+                                                )}
+                                            </select>
+                                        </div>
+
+                                        {/* Generate Bill Button */}
+                                        <button
+                                            onClick={generateBill}
+                                            disabled={cart.length === 0}
+                                            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-xl font-bold text-lg hover:from-orange-600 hover:to-red-600 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-xl hover-lift"
+                                        >
+                                            <ReceiptIcon className="w-6 h-6 inline mr-2" />
+                                            {cart.length === 0 ? 'Add Items First' : `Generate Bill (${paymentMethod})`}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            /* DASHBOARD VIEW */
+                            <div className="space-y-6 animate-fadeIn">
+                                {/* Stats Cards - Different layout for Cashier vs Admin/Manager */}
+                                <div className={`grid grid-cols-1 ${user.role === 'cashier' ? 'md:grid-cols-2' : 'md:grid-cols-4'} gap-6`}>
+                                    {/* For Cashier: Only show these 2 cards */}
+                                    {user.role === 'cashier' ? (
+                                        <>
+                                            <div className="glass-effect rounded-2xl p-6 shadow-lg hover-lift">
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-gray-500 text-sm mb-1">Today's Bills</p>
+                                                        <p className="text-3xl font-bold gradient-text">{todaySales.length}</p>
+                                                    </div>
+                                                    <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-3 rounded-xl">
+                                                        <ReceiptIcon className="w-7 h-7 text-white" />
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mt-2">Bills generated today</p>
+                                            </div>
+
+                                            <div className="glass-effect rounded-2xl p-6 shadow-lg hover-lift">
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-gray-500 text-sm mb-1">Total Bills</p>
+                                                        <p className="text-3xl font-bold gradient-text">{bills.length}</p>
+                                                    </div>
+                                                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
+                                                        <DashboardIcon className="w-7 h-7 text-white" />
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mt-2">All time sales</p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        /* For Admin/Manager: Show all 4 cards including Revenue */
+                                        <>
+                                            <div className="glass-effect rounded-2xl p-6 shadow-lg hover-lift">
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-gray-500 text-sm mb-1">Today's Revenue</p>
+                                                        <p className="text-3xl font-bold gradient-text">{CURRENCY_SYMBOL}{todayTotal.toLocaleString()}</p>
+                                                    </div>
+                                                    <div className="bg-gradient-to-br from-orange-500 to-red-500 p-3 rounded-xl">
+                                                        <ReceiptIcon className="w-7 h-7 text-white" />
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mt-2">{todaySales.length} bills today</p>
+                                            </div>
+
+                                            <div className="glass-effect rounded-2xl p-6 shadow-lg hover-lift">
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-gray-500 text-sm mb-1">Today's Bills</p>
+                                                        <p className="text-3xl font-bold gradient-text">{todaySales.length}</p>
+                                                    </div>
+                                                    <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-3 rounded-xl">
+                                                        <ReceiptIcon className="w-7 h-7 text-white" />
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mt-2">Bills generated today</p>
+                                            </div>
+
+                                            <div className="glass-effect rounded-2xl p-6 shadow-lg hover-lift">
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-gray-500 text-sm mb-1">Total Bills</p>
+                                                        <p className="text-3xl font-bold gradient-text">{bills.length}</p>
+                                                    </div>
+                                                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
+                                                        <DashboardIcon className="w-7 h-7 text-white" />
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mt-2">All time sales</p>
+                                            </div>
+
+                                            <div className="glass-effect rounded-2xl p-6 shadow-lg hover-lift">
+                                                <div className="flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-gray-500 text-sm mb-1">Menu Items</p>
+                                                        <p className="text-3xl font-bold gradient-text">{menuItems.length}</p>
+                                                    </div>
+                                                    <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-3 rounded-xl">
+                                                        <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-gray-500 mt-2">Available in menu</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* NEW: Daily Sales Report - Always show for everyone */}
+                                <DailySalesReport todaySales={todaySales} todayTotal={todayTotal} />
+
+                                {/* Best Sellers */}
+                                <div className="glass-effect rounded-2xl p-6 shadow-lg">
+                                    <h3 className="text-xl font-bold text-gray-800 mb-4">Top Selling Items (All Time)</h3>
+                                    <div className="space-y-3">
+                                        {bestSellers.length > 0 ? (
+                                            bestSellers.map((item, index) => (
+                                                <div key={item.name} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover-lift">
+                                                    <div className="flex items-center">
+                                                        <span className="text-xl font-bold text-orange-600 mr-4 w-8">{index + 1}.</span>
+                                                        <div>
+                                                            <p className="font-semibold text-gray-800">{item.name}</p>
+                                                            <p className="text-sm text-gray-500">Revenue: {CURRENCY_SYMBOL}{item.totalRevenue.toLocaleString()}</p>
+                                                        </div>
+                                                    </div>
+                                                    <span className="px-4 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-full">
+                                                        {item.totalQuantity} sold
+                                                    </span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-8 text-gray-400">
+                                                <p>Start billing to see top selling items</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Recent Bills */}
+                                <div className="glass-effect rounded-2xl p-6 shadow-lg">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="text-xl font-bold text-gray-800">Recent Bills</h3>
+                                        {user.role === 'admin' && (
+                                            <button
+                                                onClick={clearAllData}
+                                                className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all hover-lift"
+                                            >
+                                                Clear All Data
+                                            </button>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full">
+                                            <thead>
+                                                <tr className="bg-gradient-to-r from-orange-50 to-red-50">
+                                                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Bill #</th>
+                                                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Table</th>
+                                                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Customer</th>
+                                                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Payment</th>
+                                                    <th className="text-right py-3 px-4 font-semibold text-gray-700">Amount</th>
+                                                    <th className="text-center py-3 px-4 font-semibold text-gray-700">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {bills.slice().reverse().slice(0, 10).map((bill, idx) => (
+                                                    <tr key={bill.id} className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 transition-colors">
+                                                        <td className="py-3 px-4 font-semibold text-orange-600">{bill.billNumber}</td>
+                                                        <td className="py-3 px-4 text-gray-600">{bill.tableNumber}</td>
+                                                        <td className="py-3 px-4">{bill.customerName}</td>
+                                                        <td className="py-3 px-4">
+                                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                                                bill.paymentMethod === 'Cash' ? 'bg-green-100 text-green-800' :
+                                                                bill.paymentMethod === 'Card' ? 'bg-blue-100 text-blue-800' :
+                                                                'bg-purple-100 text-purple-800'
+                                                            }`}>
+                                                                {bill.paymentMethod}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3 px-4 text-right font-bold text-green-600">
+                                                            {CURRENCY_SYMBOL}{bill.total.toLocaleString()}
+                                                        </td>
+                                                        <td className="py-3 px-4 text-center">
+                                                            <button
+                                                                onClick={() => printBillReceipt(bill)}
+                                                                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all hover-lift shadow-md"
+                                                            >
+                                                                <PrinterIcon className="w-4 h-4 inline mr-1" />
+                                                                Print
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {bills.length === 0 && (
+                                            <div className="text-center py-12">
+                                                <ReceiptIcon className="w-16 h-16 text-gray-300 mx-auto mb-3" />
+                                                <p className="text-gray-400">No bills generated yet</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Print Bill Modal */}
+                        {printBill && (
+                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                                <div className="glass-effect rounded-3xl shadow-2xl p-8 max-w-md w-full animate-fadeIn">
+                                    <div className="text-center">
+                                        <div className="bg-gradient-to-br from-green-500 to-emerald-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <ReceiptIcon className="w-10 h-10 text-white" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-gray-800 mb-2">Bill Generated Successfully!</h3>
+                                        <p className="text-gray-600 mb-1">
+                                            Bill Number: <span className="font-bold text-orange-600">{printBill.billNumber}</span>
+                                        </p>
+                                        <p className="text-gray-600 mb-1">
+                                            Table: <span className="font-bold">{printBill.tableNumber}</span>
+                                        </p>
+                                        <p className="text-gray-600 mb-6">
+                                            Total: <span className="font-bold text-green-600">{CURRENCY_SYMBOL}{printBill.total.toFixed(2)}</span>
+                                        </p>
+                                        
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    printBillReceipt(printBill);
+                                                    setPrintBill(null);
+                                                }}
+                                                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all hover-lift shadow-lg"
+                                            >
+                                                <PrinterIcon className="w-5 h-5 inline mr-2" />
+                                                Print Receipt
+                                            </button>
+                                            <button
+                                                onClick={() => setPrintBill(null)}
+                                                className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-400 transition-all hover-lift"
+                                            >
+                                                Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="mt-8 py-6 text-center text-gray-600 text-sm">
+                        <p>© {new Date().getFullYear()} {RESTAURANT_NAME} Professional Billing System v3.0</p>
+                        <p className="mt-1">Logged in as: {user.name} • Role: {user.role} • Today's Bills: {todaySales.length}</p>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP COMPONENT ---
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                // Check for remembered user
+                const remembered = localStorage.getItem('rb-user');
+                if (remembered) {
+                    setUser(JSON.parse(remembered));
+                }
+                setLoading(false);
+            }, []);
+
+            const handleLogin = (userData) => {
+                setUser(userData);
+            };
+
+            const handleLogout = () => {
+                localStorage.removeItem('rb-user');
+                setUser(null);
+            };
+
+            if (loading) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-orange-500 mx-auto mb-4"></div>
+                            <p className="text-gray-600 text-lg">Initializing System...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            return user ? (
+                <RestaurantBillingSystem user={user} onLogout={handleLogout} />
+            ) : (
+                <LoginScreen onLogin={handleLogin} />
+            );
+        };
+
+        // Render the application
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
